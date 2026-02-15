@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- 카카오톡 및 SNS 공유 시 미리보기 최적화 (오픈그래프 태그) -->
+    <meta property="og:title" content="나의 기획력 진단 - LEARN & INSIGHT">
+    <meta property="og:description" content="ONLY 아이디어맨? 심부름 센터? 설레발이맨? 당신의 진짜 기획 역량을 확인하세요.">
+    <meta property="og:type" content="website">
+    
+    <title>나의 기획력 진단 - LEARN & INSIGHT</title>
+    <!-- Tailwind CSS 프레임워크 사용 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* 기본 배경 및 폰트 설정 */
+        body {
+            font-family: 'Noto Sans KR', sans-serif;
+            background: #0f172a; /* 전문적인 다크 네이비 배경 */
+            background-image: 
+                radial-gradient(at 0% 0%, rgba(59, 130, 246, 0.15) 0, transparent 50%), 
+                radial-gradient(at 100% 100%, rgba(139, 92, 246, 0.15) 0, transparent 50%);
+            min-height: 100vh;
+            color: #f8fafc;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        /* 글래스모피즘: 반투명 유리 질감 스타일 */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* 미묘한 노이즈 질감 오버레이 */
+        body::after {
+            content: "";
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0.02;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+            z-index: 9999;
+        }
+
+        /* 선택된 옵션 강조 효과 */
+        .option-button.active {
+            background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+            border-color: transparent;
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);
+        }
+
+        /* 진행 상태 바 스타일 */
+        .progress-fill {
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* 결과 그래프 축 및 영역 스타일 */
+        .chart-axis { stroke: rgba(255, 255, 255, 0.3); stroke-width: 1.5; }
+        .chart-grid { stroke: rgba(255, 255, 255, 0.1); stroke-width: 1; stroke-dasharray: 4; }
+        .chart-polygon { fill: rgba(139, 92, 246, 0.3); stroke: #8b5cf6; stroke-width: 3; stroke-linejoin: round; }
+        .chart-point { fill: #3b82f6; stroke: #fff; stroke-width: 2; }
+        
+        /* 화면 전환 페이드 인 애니메이션 */
+        .fade-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <!-- 상단 헤더 영역 -->
+    <header class="w-full max-w-md mb-8 text-center fade-in">
+        <h1 class="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-400">나의 기획력 진단</h1>
+        <p class="text-slate-400 text-[10px] mt-2 uppercase tracking-widest font-medium">LEARN & INSIGHT Leadership Solution</p>
+    </header>
+
+    <main class="w-full max-w-md flex-grow">
+        <!-- 시작 화면: 진단 개요 안내 -->
+        <div id="start-screen" class="glass-card p-8 text-center fade-in">
+            <div class="mb-6 text-6xl">🎯</div>
+            <h2 class="text-xl font-bold mb-4 text-white">진단 시작하기</h2>
+            <p class="text-slate-300 text-sm mb-8 leading-relaxed text-left">
+                본 진단은 21개 문항을 통해 당신의 기획 스타일(창의력, 구성력, 설득력)을 정밀하게 분석합니다. 자신의 실제 업무 모습에 가장 가까운 답변을 직관적으로 선택해 주세요.
+            </p>
+            <button onclick="startSurvey()" class="w-full py-4 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl font-bold text-white shadow-lg transition-all active:scale-95 hover:opacity-90">
+                진단 시작하기
+            </button>
+        </div>
+
+        <!-- 설문 진행 화면 -->
+        <div id="survey-screen" class="hidden fade-in">
+            <div class="mb-4 flex justify-between items-end">
+                <span id="question-number" class="text-blue-400 font-bold text-lg">01 / 21</span>
+                <span id="category-label" class="text-[10px] text-slate-400 px-3 py-1 bg-slate-800/80 rounded-full italic font-medium">영역 분석 중</span>
+            </div>
+            <!-- 진행 상태 바 -->
+            <div class="h-1.5 w-full bg-slate-800 rounded-full mb-8 overflow-hidden">
+                <div id="progress-fill" class="progress-fill h-full" style="width: 5%"></div>
+            </div>
+
+            <!-- 문항 출력 영역 -->
+            <div class="glass-card p-6 mb-6">
+                <p id="question-text" class="text-lg font-medium leading-relaxed min-h-[100px] text-slate-100 italic"></p>
+            </div>
+
+            <!-- 응답 선택지 (1~5점) -->
+            <div class="space-y-3">
+                <button onclick="handleAnswer(5)" class="w-full p-4 glass-card text-left flex items-center hover:bg-slate-700/50 option-button group">
+                    <span class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center mr-4 text-xs font-bold transition-colors group-hover:bg-blue-500/40">5</span>
+                    매우 그렇다
+                </button>
+                <button onclick="handleAnswer(4)" class="w-full p-4 glass-card text-left flex items-center hover:bg-slate-700/50 option-button group">
+                    <span class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center mr-4 text-xs font-bold transition-colors group-hover:bg-blue-500/40">4</span>
+                    그렇다
+                </button>
+                <button onclick="handleAnswer(3)" class="w-full p-4 glass-card text-left flex items-center hover:bg-slate-700/50 option-button group">
+                    <span class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center mr-4 text-xs font-bold transition-colors group-hover:bg-blue-500/40">3</span>
+                    보통이다
+                </button>
+                <button onclick="handleAnswer(2)" class="w-full p-4 glass-card text-left flex items-center hover:bg-slate-700/50 option-button group">
+                    <span class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center mr-4 text-xs font-bold transition-colors group-hover:bg-blue-500/40">2</span>
+                    그렇지 않다
+                </button>
+                <button onclick="handleAnswer(1)" class="w-full p-4 glass-card text-left flex items-center hover:bg-slate-700/50 option-button group">
+                    <span class="w-8 h-8 rounded-full bg-blue-500/20 text-blue-400 flex items-center justify-center mr-4 text-xs font-bold transition-colors group-hover:bg-blue-500/40">1</span>
+                    매우 그렇지 않다
+                </button>
+            </div>
+            
+            <div class="mt-8">
+                <button onclick="prevQuestion()" id="prev-btn" class="text-slate-400 text-xs hover:text-white disabled:opacity-30 flex items-center transition-colors px-2" disabled>
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                    이전 문항으로 돌아가기
+                </button>
+            </div>
+        </div>
+
+        <!-- 최종 진단 결과 리포트 화면 -->
+        <div id="result-screen" class="hidden fade-in pb-16">
+            <div class="glass-card p-6 mb-6 text-center">
+                <p class="text-blue-400 text-[10px] font-bold mb-1 uppercase tracking-widest">Diagnosis Result</p>
+                <h2 id="result-nickname" class="text-3xl font-black mb-2 text-white italic tracking-tighter">유형 분석</h2>
+                <div class="inline-block px-4 py-1 bg-blue-500/20 rounded-full text-[11px] text-blue-300 mb-6 border border-blue-500/30">
+                    <span id="top-area-name">기획 전문가 타입</span>
+                </div>
+                
+                <!-- 기획력 요소진단 차트 영역 (SVG 부채꼴 그래프) -->
+                <div class="relative w-full aspect-square flex items-center justify-center mb-4">
+                    <svg id="result-chart" viewBox="0 0 400 400" class="w-full h-full overflow-visible">
+                        <circle cx="50" cy="350" r="100" class="chart-grid" fill="none" />
+                        <circle cx="50" cy="350" r="200" class="chart-grid" fill="none" />
+                        <circle cx="50" cy="350" r="300" class="chart-grid" fill="none" />
+                        <line x1="50" y1="350" x2="50" y2="30" class="chart-axis" /> <!-- A축: 창의 -->
+                        <line x1="50" y1="350" x2="330" y2="70" class="chart-axis" /> <!-- B축: 구성 -->
+                        <line x1="50" y1="350" x2="370" y2="350" class="chart-axis" /> <!-- C축: 표현 -->
+                        <text x="50" y="20" text-anchor="middle" fill="#3b82f6" font-weight="bold" font-size="14">A 창의/착상</text>
+                        <text x="345" y="60" text-anchor="middle" fill="#8b5cf6" font-weight="bold" font-size="14">B 구성/구상</text>
+                        <text x="375" y="375" text-anchor="middle" fill="#10b981" font-weight="bold" font-size="14">C 표현/설득</text>
+                        <polygon id="data-polygon" class="chart-polygon" points="50,350 50,350 50,350" />
+                        <circle id="point-a" cx="50" cy="350" r="5" class="chart-point" />
+                        <circle id="point-b" cx="50" cy="350" r="5" class="chart-point" />
+                        <circle id="point-c" cx="50" cy="350" r="5" class="chart-point" />
+                    </svg>
+                </div>
+
+                <div class="grid grid-cols-3 gap-2 text-center mt-4">
+                    <div class="p-3 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                        <p class="text-[9px] text-blue-400 mb-1">A 창의</p>
+                        <p id="score-a" class="text-lg font-bold text-white">0</p>
+                    </div>
+                    <div class="p-3 bg-purple-500/10 rounded-xl border border-purple-500/20">
+                        <p class="text-[9px] text-purple-400 mb-1">B 구성</p>
+                        <p id="score-b" class="text-lg font-bold text-white">0</p>
+                    </div>
+                    <div class="p-3 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
+                        <p class="text-[9px] text-emerald-400 mb-1">C 표현</p>
+                        <p id="score-c" class="text-lg font-bold text-white">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 상세 리포트 카드 -->
+            <div id="detail-report" class="space-y-4 mb-10 text-left">
+                <div class="glass-card p-6 border-l-4 border-blue-500">
+                    <h3 class="font-bold mb-3 text-blue-400 text-sm flex items-center uppercase tracking-tighter">
+                        <span class="mr-2">✨</span> 핵심 역량 및 강점 (Strength)
+                    </h3>
+                    <p id="report-pros" class="text-slate-200 text-sm leading-relaxed font-light"></p>
+                </div>
+                
+                <div class="glass-card p-6 border-l-4 border-purple-500">
+                    <h3 class="font-bold mb-3 text-purple-400 text-sm flex items-center uppercase tracking-tighter">
+                        <span class="mr-2">💡</span> 성장을 위한 제언 및 평가 (Evaluation)
+                    </h3>
+                    <div class="space-y-4">
+                        <div class="bg-white/5 p-4 rounded-xl border border-white/5">
+                            <p id="report-cons" class="text-slate-300 text-sm leading-relaxed font-bold"></p>
+                        </div>
+                        <div class="border-t border-white/10 pt-4">
+                            <p class="text-[10px] text-slate-400 mb-3 uppercase tracking-widest font-semibold text-center italic">동료들의 실제 피드백 사례</p>
+                            <ul id="report-eval" class="text-slate-300 text-sm space-y-3 italic opacity-90"></ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="location.reload()" class="w-full py-4 bg-white/5 border border-slate-600 rounded-xl font-bold text-slate-300 transition-all hover:bg-white/10 active:scale-95">
+                테스트 다시하기
+            </button>
+        </div>
+    </main>
+
+    <footer class="mt-auto py-10 text-center text-slate-500 text-[9px] tracking-widest opacity-60">
+        © 2025 LEARN & INSIGHT. All Rights Reserved.
+    </footer>
+
+    <script>
+        // 진단 문항 (A: 1-7, C: 8-14, B: 15-21)
+        const questions = [
+            { id: 1, category: 'A', text: "나는 현황파악, 문제점 및 원인분석, 종합대책, 세부실행계획이 조화를 이룬 작성능력을 갖추고 있다." },
+            { id: 2, category: 'A', text: "내가 세운 계획을 실제로 진행하는 중에 계획에서 빠진 부분이 발견되어 당황하는 경우가 거의 없다." },
+            { id: 3, category: 'A', text: "나는 현상을 진단하고 앞일을 추론하는 것이, 앞뒤가 맞고 논리 정연하여 제갈량 뺨친다는 평을 듣는다." },
+            { id: 4, category: 'A', text: "내가 기획안을 수립하거나 공문을 작성하면 누가 봐도 손댈 것이 없을 정도로 치밀하다." },
+            { id: 5, category: 'A', text: "나는 문제에 대한 정보를 수집하고 분류하여 핵심적인 원인을 찾아가는 구체적 프로세스를 알고 있다." },
+            { id: 6, category: 'A', text: "나는 바쁜 업무 처리 중에도 '어떻게 하는 것인지' 보다는 '왜 하는 것인지'에 대한 목적을 항상 고민한다." },
+            { id: 7, category: 'A', text: "나는 평소에도 문서에 Flow 차트나 도해 등 그래픽을 즐겨 사용하여 종합정리를 잘한다." },
+            { id: 8, category: 'C', text: "예상되는 문제에 미리 대책안을 제시하기 위해 평소 경험뿐 아니라 다양한 자료를 구해 활용한다." },
+            { id: 9, category: 'C', text: "나는 다양한 정보매체를 통해 회사와 관련된 사업부분이나 앞으로의 사업방향성에 대한 정보의 수집과 분석을 꾸준히 하고 있다." },
+            { id: 10, category: 'C', text: "나는 처음 보는 사람들에게도 말을 재미있고 조리 있게 한다는 평을 듣는다." },
+            { id: 11, category: 'C', text: "발표나 회의시 주어진 시간이 부족하다 하더라도 준비한 내용에 대해서는 핵심 위주로 깔끔하게 전달한다." },
+            { id: 12, category: 'C', text: "나는 다른 사람과의 대화를 통해 내 의견을 상대방이 받아들이게 만드는 것에 자신이 있다." },
+            { id: 13, category: 'C', text: "상대방에 대한 성향이나 정보를 사전에 분석하여 눈높이에 부합하는 적절한 수준의 메시지를 전달한다." },
+            { id: 14, category: 'C', text: "나는 같은 사람에게 장시간 대화하더라도 그의 기분이나 상황에 맞추어 다양한 방법으로 대응할 수 있다." },
+            { id: 15, category: 'B', text: "반대 의견에 직면했을 때 나의 최초 주장에 얽매이지 않고 항상 다각도에서 유연하게 상황을 분석한다." },
+            { id: 16, category: 'B', text: "내가 잘 모르는 일은 부끄러워 하거나 주저함 없이 바로 주위 사람들에게 물어봐서라도 알아내야 한다." },
+            { id: 17, category: 'B', text: "신문이나 여러 정보매체를 통해 얻은 정보를 우리 회사에 적용 가능한 아이디어로 발전시키곤 한다." },
+            { id: 18, category: 'B', text: "장황하고 복잡한 이야기를 들어도 그것을 한 두 마디로 압축, 단순화하는 재주가 있다는 말을 듣는다." },
+            { id: 19, category: 'B', text: "회의 시 외견상 무관한 사안들을 다른 사람들이 미처 인식하지 못한 관점에서 연결하여 설명할 수 있다." },
+            { id: 20, category: 'B', text: "상사의 지시사항에 대해, 정확하게 의중을 파악할 뿐 아니라 관련된 상위 문제까지 연결시켜 이해한다." },
+            { id: 21, category: 'B', text: "지시 받은 사항에 대해 답을 낼 때까지 깊게 고민하며, 잠잘 때에나 출퇴근 시에도 몰입하여 생각한다." }
+        ];
+
+        // 유형 데이터
+        const typeDetails = {
+            'A': {
+                name: '창의력/착상력 (A) 중심 전문가',
+                nickname: 'ONLY 아이디어맨',
+                pros: '특이한 아이디어가 많다. 기존의 관성에서 벗어나 남들이 보지 못하는 새로운 기획의 실마리를 포착하는 능력이 독보적입니다. 특히 어려운 문제에 직면했을 때 혁신적인 돌파구를 제안하는 조직의 활력소 역할을 수행합니다.',
+                cons: '정리가 전혀 안 되어 실현이 불가능한 경우가 생기기도 한다. 아이디어의 신선함에 비해 이를 실무적으로 구조화하거나 끝까지 완수하는 능력이 부족할 수 있습니다. 자칫 "뜬구름 잡는 이야기"를 한다는 평가를 받을 수 있습니다.',
+                evals: [
+                    '“아이디어는 정말 좋은데, 현실성이 너무 없어서 막막해요.”',
+                    '“반짝이는 건 분명 좀 있는데 결국 뭘 하자는 건지 통 이해가 안 가네요.”'
+                ]
+            },
+            'B': {
+                name: '구성력/구상력 (B) 중심 전문가',
+                nickname: '심부름 센터',
+                pros: '깔끔하고 세련되게 잘 정리된 문서를 작성하며 방대한 데이터를 논리적인 프로세스에 따라 설계하는 능력이 독보적입니다. 당신의 기획안은 실행 로드맵이 명확하여 조직의 안정적인 의사결정과 실질적인 성과 창출을 돕는 든든한 기반이 됩니다.',
+                cons: '이미 정해진 틀 안에서는 최고의 정리를 해내지만, 기획의 핵심인 새로운 시각이나 차별화된 파격 제안이 다소 부족해 보일 수 있습니다. 정리에 치중하다가 기획의 본질인 "혁신적인 가치"를 놓치지 않도록 발산적 사고 훈련이 필요합니다.',
+                evals: [
+                    '“장표 구성은 깔끔하고 그럴듯한데, 맨날 보던 뻔한 이야기 아닌가요?”',
+                    '“정리는 참 잘했어요. 근데 왜 예상치 못한 질문엔 답변을 못 하시나요?”'
+                ]
+            },
+            'C': {
+                name: '표현력/설득력 (C) 중심 전문가',
+                nickname: '설레발이맨',
+                pros: '남을 설득시켜 자기편으로 잘 만드는 탁월한 소통 역량과 협상 기술을 보유하고 있습니다. 복잡한 이해관계자들 사이에서 기획안에 대한 공감과 합의를 이끌어내는 힘이 강력하며, 갈등 상황에서도 추진력을 발휘하여 실행 동력을 확보하는 능력이 훌륭합니다.',
+                cons: '설득의 기술은 화려하나 기획서 본연의 치밀한 분석이나 객관적인 데이터 근거가 빈약하다는 평가를 받을 수 있습니다. 핵심은 다 빠진 주변 이야기를 한다는 인상을 줄 수 있으므로 논리적 치밀함과 본질적인 문제 정의 역량을 더 키워야 합니다.',
+                evals: [
+                    '“듣고 보니 맞는 말인 것 같긴 한데, 사실 이건 너무 당연한 이야기잖아요.”',
+                    '“오, 엉성한 장표를 가지고도 어떤 날카로운 질문도 어떻게든 잘 피해가시는데요?”'
+                ]
+            }
+        };
+
+        let currentIdx = 0;
+        let answers = new Array(questions.length).fill(0);
+
+        function startSurvey() {
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('survey-screen').classList.remove('hidden');
+            renderQuestion();
+        }
+
+        function renderQuestion() {
+            const q = questions[currentIdx];
+            document.getElementById('question-number').innerText = `${String(currentIdx + 1).padStart(2, '0')} / ${questions.length}`;
+            document.getElementById('question-text').innerText = q.text;
+            const catMap = { 'A': '창의력 영역 분석 중', 'C': '표현력 영역 분석 중', 'B': '구성력 영역 분석 중' };
+            document.getElementById('category-label').innerText = catMap[q.category];
+            document.getElementById('progress-fill').style.width = `${((currentIdx + 1) / questions.length) * 100}%`;
+            document.getElementById('prev-btn').disabled = currentIdx === 0;
+            const buttons = document.querySelectorAll('.option-button');
+            buttons.forEach((btn, idx) => {
+                const score = 5 - idx;
+                if (answers[currentIdx] === score) btn.classList.add('active');
+                else btn.classList.remove('active');
+            });
+        }
+
+        function handleAnswer(score) {
+            answers[currentIdx] = score;
+            setTimeout(() => {
+                if (currentIdx < questions.length - 1) {
+                    currentIdx++;
+                    renderQuestion();
+                } else {
+                    showResult();
+                }
+            }, 220);
+        }
+
+        function prevQuestion() {
+            if (currentIdx > 0) {
+                currentIdx--;
+                renderQuestion();
+            }
+        }
+
+        function showResult() {
+            document.getElementById('survey-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+            let sA = 0, sB = 0, sC = 0;
+            questions.forEach((q, i) => {
+                if (q.category === 'A') sA += answers[i];
+                if (q.category === 'B') sB += answers[i];
+                if (q.category === 'C') sC += answers[i];
+            });
+            document.getElementById('score-a').innerText = sA;
+            document.getElementById('score-b').innerText = sB;
+            document.getElementById('score-c').innerText = sC;
+            
+            let top = 'A';
+            if (sB >= sA && sB >= sC) top = 'B';
+            else if (sC >= sA && sC >= sB) top = 'C';
+            
+            const info = typeDetails[top];
+            document.getElementById('result-nickname').innerText = `"${info.nickname}"`;
+            document.getElementById('top-area-name').innerText = info.name;
+            document.getElementById('report-pros').innerText = info.pros;
+            document.getElementById('report-cons').innerText = info.cons;
+            const evalList = document.getElementById('report-eval');
+            evalList.innerHTML = '';
+            info.evals.forEach(e => {
+                const li = document.createElement('li');
+                li.className = "pl-6 relative before:content-['💬'] before:absolute before:left-0 before:text-blue-400 opacity-90";
+                li.innerText = e;
+                evalList.appendChild(li);
+            });
+            drawChart(sA, sB, sC);
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function drawChart(a, b, c) {
+            const maxVal = 35;
+            const originX = 50, originY = 350;
+            const axisLength = 280;
+            const getAPos = (val) => ({ x: originX, y: originY - (val / maxVal) * axisLength });
+            const getCPos = (val) => ({ x: originX + (val / maxVal) * axisLength, y: originY });
+            const angle = 45 * (Math.PI / 180); 
+            const getBPos = (val) => ({
+                x: originX + Math.cos(angle) * (val / maxVal) * axisLength * 1.15,
+                y: originY - Math.sin(angle) * (val / maxVal) * axisLength * 1.15
+            });
+            const pA = getAPos(a), pB = getBPos(b), pC = getCPos(c);
+            document.getElementById('data-polygon').setAttribute('points', `${pA.x},${pA.y} ${pB.x},${pB.y} ${pC.x},${pC.y} ${originX},${originY}`);
+            document.getElementById('point-a').setAttribute('cx', pA.x); document.getElementById('point-a').setAttribute('cy', pA.y);
+            document.getElementById('point-b').setAttribute('cx', pB.x); document.getElementById('point-b').setAttribute('cy', pB.y);
+            document.getElementById('point-c').setAttribute('cx', pC.x); document.getElementById('point-c').setAttribute('cy', pC.y);
+        }
+    </script>
+</body>
+</html>
